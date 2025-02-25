@@ -1,0 +1,32 @@
+import sqlite3
+
+# الاتصال بقاعدة البيانات (سيتم إنشاؤها إذا لم تكن موجودة)
+conn = sqlite3.connect('poultry_sales.db')
+cursor = conn.cursor()
+
+# إنشاء جدول العملاء
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL
+)
+''')
+
+# إنشاء جدول المبيعات
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS sales (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    chicken_type TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    price REAL NOT NULL,
+    amount_paid REAL NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers (id)
+)
+''')
+
+# حفظ التغييرات وإغلاق الاتصال
+conn.commit()
+conn.close()

@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة العملاء</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">العودة إلى المبيعات</a>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h2 class="text-center mb-4">إدارة العملاء</h2>
+        <button class="btn btn-success mb-3" onclick="addNewCustomer()">إضافة عميل جديد</button>
+        <table class="table table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>#</th>
+                    <th>اسم العميل</th>
+                    <th>رقم الموبايل</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'https://salemalihu.onrender.com'; // استبدل برابط Render
+
+        async function loadCustomers() {
+            const response = await fetch(`${API_URL}/get_customers`);
+            const customers = await response.json();
+            const tableBody = document.getElementById('customerTableBody');
+            tableBody.innerHTML = '';
+
+            customers.forEach((customer, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${customer.name}</td>
+                    <td>${customer.phone}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function addNewCustomer() {
+            const name = prompt("ادخل اسم العميل:");
+            if (!name) return;
+            const phone = prompt("ادخل رقم الموبايل:");
+            if (!phone) return;
+
+            const response = await fetch(`${API_URL}/add_customer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone })
+            });
+            const result = await response.json();
+            alert(result.message);
+            if (result.status === 'success') loadCustomers();
+        }
+
+        window.onload = loadCustomers;
+    </script>
+</body>
+</html>

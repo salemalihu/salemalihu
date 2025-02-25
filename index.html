@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام محاسبي لمبيعات الدواجن</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">نظام محاسبي لمبيعات الدواجن</a>
+        </div>
+    </nav>
+    <div class="container my-5">
+        <div class="card p-4">
+            <h2 class="text-center mb-4">إضافة فاتورة جديدة</h2>
+            <form id="salesForm">
+                <div class="form-group">
+                    <label>اسم العميل:</label>
+                    <select class="form-control" id="customerName" required onchange="fillPhoneNumber()">
+                        <option value="">اختر عميل</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary mt-2" onclick="addNewCustomer()">إضافة عميل جديد</button>
+                </div>
+                <div class="form-group">
+                    <label>رقم الموبايل:</label>
+                    <input type="text" class="form-control" id="phoneNumber" disabled>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>التاريخ:</label>
+                        <input type="date" class="form-control" id="date" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>فئة الدجاج:</label>
+                        <select class="form-control" id="chickenType" required>
+                            <option value="دجاج لاحم">دجاج لاحم</option>
+                            <option value="دجاج بياض">دجاج بياض</option>
+                            <option value="دجاج بلدي">دجاج بلدي</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>عدد الدجاج:</label>
+                        <input type="number" class="form-control" id="quantity" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>السعر لكل دجاجة (ريال):</label>
+                        <input type="number" class="form-control" id="price" required>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>المبلغ المدفوع (ريال):</label>
+                        <input type="number" class="form-control" id="amountPaid" required>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-block" onclick="addSale()">إضافة مبيع</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        const API_URL = 'https://salemalihu.onrender.com'; // استبدل بالرابط الذي ستحصل عليه من Render
+        let customers = [];
+
+        async function loadCustomers() {
+            const response = await fetch(`${API_URL}/get_customers`);
+            customers = await response.json();
+            const customerSelect = document.getElementById('customerName');
+            customerSelect.innerHTML = '<option value="">اختر عميل</option>';
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = customer.name;
+                customerSelect.appendChild(option);
+            });
+        }
+
+        function fillPhoneNumber() {
+            const selectedId = document.getElementById('customerName').value;
+            const customer = customers.find(c => c.id == selectedId);
+            document.getElementById('phoneNumber').value = customer ? customer.phone : '';
+        }
+
+        async function addNewCustomer() {
+            const name = prompt("ادخل اسم العميل الجديد:");
+            if (!name) return;
+            const phone = prompt("ادخل رقم الموبايل:");
+            if (!phone) return;
+            const response = await fetch(`${API_URL}/add_customer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone })
+            });
+            const result = await response.json();
+            alert(result.message);
+            if (result.status === 'success') loadCustomers();
+        }
+
+        async function addSale() {
+            const customerId = document.getElementById('customerName').value;
+            const date = document.getElementById('date').value;
+            const chickenType = document.getElementById('chickenType').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const price = parseFloat(document.getElementById('price').value);
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value);
+
+            if (!customerId || !date || !chickenType || isNaN(quantity) || isNaN(price) || isNaN(amountPaid)) {
+                alert("يرجى تعبئة جميع الحقول!");
+                return;
+            }
+
+            const response = await fetch(`${API_URL}/add_sale`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customer_id: customerId, date, chicken_type: chickenType, quantity, price, amount_paid: amountPaid })
+            });
+            const result = await response.json();
+            alert(result.message);
+            document.getElementById('salesForm').reset();
+        }
+
+        window.onload = loadCustomers;
+    </script>
+</body>
+</html>
